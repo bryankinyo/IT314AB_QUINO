@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
-  students.sort((a, b) => a.name!.compareTo(b.name!));
 }
 
 class Student {
@@ -121,8 +120,16 @@ class MyApp extends StatelessWidget {
 }
 
 // HOME PAGE
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  List<bool> isFavorite = List.filled(students.length, false);
+  List<bool> isEdited = List.filled(students.length, false);
 
   @override
   Widget build(BuildContext context) {
@@ -145,115 +152,198 @@ class MyHomePage extends StatelessWidget {
             )
             
           : ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: students.length,
-        itemBuilder: (context, index) {
-          final student = students[index];
-          return Card(
-            elevation: 10,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-                ),
+          
+          padding: const EdgeInsets.all(20),
+          itemCount: students.length,
+          itemBuilder: (context, index) {
+            final student = students[index];
+           return GestureDetector(
+              onTap: () {
+                print('Card tapped for ${student.name}');
+              },
+            child: Card(
+              elevation: 10,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                  ),
 
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      child: Padding(
+                        
+                        padding: const EdgeInsets.all(20),
+                      
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
 
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
 
-                        children: [
-
-                          Text(
-                            'Student Card ${index + 1}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                            Text(
+                              'Student Card ${index + 1}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
 
-                          const SizedBox(height: 10),
+                            const SizedBox(height: 10),
 
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundImage: AssetImage(student.profileImage),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          Text(
-                            'ID: ${student.studentID ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          Text(
-                            student.name ?? 'No Name',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage: AssetImage(student.profileImage),
                             ),
-                          ),
 
-                          const SizedBox(height: 10),
+                            const SizedBox(height: 10),
+
+                            Text(
+                              'ID: ${student.studentID ?? 'N/A'}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            Text(
+                              student.name ?? 'No Name',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
+                            
+                            Text(
+                              'Email: ${student.email ?? 'N/A'}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+
+                            const SizedBox(height: 10),
+                            
+                            Text(
+                              'Course: ${student.course ?? 'N/A'}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+
+
+                            const SizedBox(height: 10),
+
+                            Text(
+                              'Age: ${student.age ?? 'N/A'}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            Text(
+                              'Height: ${student.height?.toStringAsFixed(2) ?? 'N/A'} ft',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+
+                            
+                            const SizedBox(height: 10),
+
+                            Text(
+                              'Hobby: ${student.hobby ?? 'N/A'}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            
+                            Text(
+                              'Favorite Subject: ${student.favoriteSubject ?? 'N/A'}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            Text(
+                            'Student Status: ${student.studentStatus == null
+                                ? 'Not provided'
+                                : student.studentStatus!
+                                    ? 'Active'
+                                    : 'Inactive'}',
+                            style: const TextStyle(fontSize: 16),
+                          ), 
+                          Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                         IconButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Edit Student'),
+                                  content: Text(
+                                    'You are about to edit ${student.name}.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Edit'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: const Icon(Icons.edit),
+                          tooltip: 'Edit Student',
+                        ),
                           
-                          Text(
-                            'Email: ${student.email ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-
-                          const SizedBox(height: 10),
+                          const SizedBox(width: 20),
                           
-                          Text(
-                            'Course: ${student.course ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 16),
+                          IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        isFavorite[index] = !isFavorite[index];
+                                      });
+
+                                      print('Favorite button pressed for ${student.name}');
+                                    },
+                                    icon: Icon(
+                                      isFavorite[index]
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                    ),
+                                    tooltip: 'Favorite Item',
+                                  ),
+
+                          const SizedBox(width: 20),
+
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  students.removeAt(index);
+                                  isFavorite.removeAt(index);
+                                  isEdited.removeAt(index);
+                                });
+
+                                print('Deleted ${student.name}');
+                              },
+                              icon: const Icon(Icons.delete),
+                              tooltip: 'Delete Student',
+                            ),
+
+                          ],
                           ),
-
-
-                          const SizedBox(height: 10),
-
-                          Text(
-                            'Age: ${student.age ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          Text(
-                            'Height: ${student.height?.toStringAsFixed(2) ?? 'N/A'} ft',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-
-                          
-                          const SizedBox(height: 10),
-
-                          Text(
-                            'Hobby: ${student.hobby ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          
-                          Text(
-                            'Favorite Subject: ${student.favoriteSubject ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          Text(
-                          'Student Status: ${student.studentStatus == null
-                              ? 'Not provided'
-                              : student.studentStatus!
-                                  ? 'Active'
-                                  : 'Inactive'}',
-                          style: const TextStyle(fontSize: 16),
-                        ), 
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-          );
-        },
+                      
+              ),
+
+            );
+          },
+          
       ),
+      
     );
+    
   }
 }
