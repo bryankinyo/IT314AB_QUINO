@@ -7,7 +7,7 @@ void main() {
 class Student {
   final String? name;
   final String? course;
-  final String? hobby;  
+  final String? hobby;
   final String profileImage;
   final double? height;
   final bool? studentStatus;
@@ -37,7 +37,7 @@ final List<Student> students = [
     course: '3 - BSIT',
     hobby: 'Basketball',
     height: 5.7,
-    studentStatus: true,
+    studentStatus: false,
     age: 21,
     studentID: 'S001',
     email: 'bryan.quino@dtbc-cebu.edu.ph',
@@ -63,7 +63,7 @@ final List<Student> students = [
     course: '3 - BSIT',
     hobby: 'Mobile Legends',
     height: 5.9,
-    studentStatus: true,
+    studentStatus: false,
     age: 20,
     studentID: 'S003',
     email: 'james.gulfan@dtbc-cebu.edu.ph',
@@ -97,7 +97,6 @@ final List<Student> students = [
   ),
 ];
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -127,184 +126,219 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class LoadingScreen extends StatelessWidget { //nag create ko lain class para sa loading screen
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white10,
+      body: const Center(
+        child: CircularProgressIndicator(
+          color: Colors.blueAccent,
+        ), // mao ni ang loading indicator nga nag show sa screen samtang nag load ang data
+      ),
+    );
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
+  bool isLoading = true; // nag set ko ug boolean variable nga isLoading para ma determine kung nag load pa ba ang data or wala
   List<bool> isFavorite = List.filled(students.length, false);
   List<bool> isEdited = List.filled(students.length, false);
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+  void initState() {
+    // nag override ko sa initState method para ma set ang isLoading to true sa pagsugod sa app gikan rapd sa stackoverflow haha (wako kagets ngano na)
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() {
+        isLoading = false; // nag set ko ug delay nga 3 seconds para ma simulate ang loading sa data, human sa 3 seconds, ma set ang isLoading to false
+      });
+    });
+  }
 
-      appBar: AppBar(
-        title: const Text('Student Profiles'),
-        backgroundColor:
-            Theme.of(context).colorScheme.inversePrimary,
-        centerTitle: true,
-      ),
+  @override
+  Widget build(BuildContext context) =>
+      isLoading // mao ni ang condition nga nag check kung nag load pa ba ang data or dili, kung nag load pa, ipakita ang loading screen, kung dili, ipakita ang main content sa app
+      ? LoadingScreen()
+      : Scaffold(
+          backgroundColor: Colors.deepPurple.shade50,
 
-      body: students.isEmpty
-          ? const Center(
-              child: Text(
-                'No student profiles available.',
-                style: TextStyle(fontSize: 18),
-              ),
-            )
-            
-          : ListView.builder(
-          
-          padding: const EdgeInsets.all(20),
-          itemCount: students.length,
-          itemBuilder: (context, index) {
-            final student = students[index];
-           return GestureDetector(
-              onTap: () {
-                print('Card tapped for ${student.name}');
-              },
-            child: Card(
-              elevation: 10,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          appBar: AppBar(
+            title: const Text('Student Profiles'),
+            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+            centerTitle: true,
+          ),
+
+          body: students.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No student profiles available.',
+                    style: TextStyle(fontSize: 18),
                   ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(15),
+                  itemCount: students.length,
+                  itemBuilder: (context, index) {
+                    final student = students[index];
+                    return GestureDetector(
+                      onTap: () {
+                        print('Card tapped for ${student.name}');
+                      },
+                      child: Card(
+                        elevation: 10,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
 
-                      child: Padding(
-                        
-                        padding: const EdgeInsets.all(20),
-                      
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                        child: Padding(
+                          padding: const EdgeInsets.all(15),
 
-                          children: [
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
 
-                            Text(
-                              'Student Card ${index + 1}',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                            children: [
+                              Text(
+                                'Student Card ${index + 1}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
 
-                            const SizedBox(height: 10),
+                              const SizedBox(height: 10),
 
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundImage: AssetImage(student.profileImage),
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            Text(
-                              'ID: ${student.studentID ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            Text(
-                              student.name ?? 'No Name',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundImage: AssetImage(
+                                  student.profileImage,
+                                ),
                               ),
-                            ),
 
-                            const SizedBox(height: 10),
-                            
-                            Text(
-                              'Email: ${student.email ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                              const SizedBox(height: 10),
 
-                            const SizedBox(height: 10),
-                            
-                            Text(
-                              'Course: ${student.course ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                              Text(
+                                'ID: ${student.studentID ?? 'N/A'}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
 
+                              const SizedBox(height: 10),
 
-                            const SizedBox(height: 10),
+                              Text(
+                                student.name ?? 'No Name',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
 
-                            Text(
-                              'Age: ${student.age ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                              const SizedBox(height: 10),
 
-                            const SizedBox(height: 10),
+                              Text(
+                                'Email: ${student.email ?? 'N/A'}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
 
-                            Text(
-                              'Height: ${student.height?.toStringAsFixed(2) ?? 'N/A'} ft',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                              const SizedBox(height: 10),
 
-                            
-                            const SizedBox(height: 10),
+                              Text(
+                                'Course: ${student.course ?? 'N/A'}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
 
-                            Text(
-                              'Hobby: ${student.hobby ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            
-                            Text(
-                              'Favorite Subject: ${student.favoriteSubject ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                              const SizedBox(height: 10),
 
-                            const SizedBox(height: 10),
+                              Text(
+                                'Age: ${student.age ?? 'N/A'}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
 
-                            Text(
-                            'Student Status: ${student.studentStatus == null
-                                ? 'Not provided'
-                                : student.studentStatus!
-                                    ? 'Active'
-                                    : 'Inactive'}',
-                            style: const TextStyle(fontSize: 16),
-                          ), 
-                          Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                         IconButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('Edit Student'),
-                                  content: Text(
-                                    'You are about to edit ${student.name}.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('Cancel'),
+                              const SizedBox(height: 10),
+
+                              Text(
+                                'Height: ${student.height?.toStringAsFixed(2) ?? 'N/A'} ft',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Text(
+                                'Hobby: ${student.hobby ?? 'N/A'}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+
+                              Text(
+                                'Favorite Subject: ${student.favoriteSubject ?? 'N/A'}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              if (student.studentStatus ==
+                                  false) // condition para sa inactive status na student
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons
+                                          .cancel, //Icon warning sa inactive status na student
+                                      color: Colors
+                                          .red, // para mahimong red ang icon
                                     ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('Edit'),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'Student Status: Inactive', // text sa status sa student nga inactive
+                                      style: const TextStyle(fontSize: 16),
                                     ),
                                   ],
-                                );
-                              },
-                            );
-                          },
-                          icon: const Icon(Icons.edit),
-                          tooltip: 'Edit Student',
-                        ),
-                          
-                          const SizedBox(width: 20),
-                          
-                          IconButton(
+                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: const Text('Edit Student'),
+                                            content: Text(
+                                              'You are about to edit ${student.name}.',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text('Edit'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                    icon: const Icon(Icons.edit),
+                                    tooltip: 'Edit Student',
+                                  ),
+
+                                  const SizedBox(width: 20),
+
+                                  IconButton(
                                     onPressed: () {
                                       setState(() {
                                         isFavorite[index] = !isFavorite[index];
                                       });
 
-                                      print('Favorite button pressed for ${student.name}');
+                                      print(
+                                        'Favorite button pressed for ${student.name}',
+                                      );
                                     },
                                     icon: Icon(
                                       isFavorite[index]
@@ -314,36 +348,29 @@ class _MyHomePageState extends State<MyHomePage> {
                                     tooltip: 'Favorite Item',
                                   ),
 
-                          const SizedBox(width: 20),
+                                  const SizedBox(width: 20),
 
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  students.removeAt(index);
-                                  isFavorite.removeAt(index);
-                                  isEdited.removeAt(index);
-                                });
+                                  IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        students.removeAt(index);
+                                        isFavorite.removeAt(index);
+                                        isEdited.removeAt(index);
+                                      });
 
-                                print('Deleted ${student.name}');
-                              },
-                              icon: const Icon(Icons.delete),
-                              tooltip: 'Delete Student',
-                            ),
-
-                          ],
+                                      print('Deleted ${student.name}');
+                                    },
+                                    icon: const Icon(Icons.delete),
+                                    tooltip: 'Delete Student',
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          ],
                         ),
                       ),
-                      
-              ),
-
-            );
-          },
-          
-      ),
-      
-    );
-    
-  }
+                    );
+                  },
+                ),
+        );
 }
