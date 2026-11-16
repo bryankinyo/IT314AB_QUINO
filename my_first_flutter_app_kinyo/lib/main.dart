@@ -113,20 +113,285 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home: const MyHomePage(),
+      // Naa diri ang initial route ug routes para sa navigation sa app
+      initialRoute: '/student-list',
+      routes: {
+        '/student-list': (context) => const StudentListScreen(),
+        '/student-details': (context) => const StudentDetailsScreen(),
+        '/add-student': (context) => const AddStudentScreen(),
+      },
     );
   }
 }
 
-// HOME PAGE
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+// ADD STUDENT SCREEN
+class AddStudentScreen extends StatefulWidget {
+  const AddStudentScreen({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<AddStudentScreen> createState() => _AddStudentScreenState();
 }
 
-class LoadingScreen extends StatelessWidget { //nag create ko lain class para sa loading screen
+class _AddStudentScreenState extends State<AddStudentScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.deepPurple.shade50,
+
+      appBar: AppBar(
+        title: const Text('Add Student'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        centerTitle: true,
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(15),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+
+          children: [
+            const Text(
+              'New Student Information',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 15),
+
+            Card(
+              elevation: 10,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+
+              child: const Padding(
+                padding: EdgeInsets.all(20),
+
+                child: Text(
+                  'Student input form will be added here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// STUDENT DETAILS SCREEN
+class StudentDetailsScreen extends StatelessWidget {
+  const StudentDetailsScreen({super.key});
+
+  // Mao ni diri ang function nga nag show sa edit dialog box para sa student details
+  void _showEditDialog(BuildContext context, Student student) {
+    final nameController = TextEditingController(text: student.name);
+    final idController = TextEditingController(text: student.studentID);
+    final courseController = TextEditingController(text: student.course);
+    final emailController = TextEditingController(text: student.email);
+    final hobbyController = TextEditingController(text: student.hobby);
+    final subjectController = TextEditingController(
+      text: student.favoriteSubject,
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Student'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                ),
+                TextField(
+                  controller: idController,
+                  decoration: const InputDecoration(labelText: 'Student ID'),
+                ),
+                TextField(
+                  controller: courseController,
+                  decoration: const InputDecoration(labelText: 'Course'),
+                ),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                TextField(
+                  controller: hobbyController,
+                  decoration: const InputDecoration(labelText: 'Hobby'),
+                ),
+                TextField(
+                  controller: subjectController,
+                  decoration: const InputDecoration(
+                    labelText: 'Favorite Subject',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ang student nga gipasa gikan sa list through route arguments
+    final student = ModalRoute.of(context)!.settings.arguments as Student;
+
+    return Scaffold(
+      backgroundColor: Colors.deepPurple.shade50,
+
+      appBar: AppBar(
+        title: const Text('Student Details'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              _showEditDialog(context, student);
+            },
+            icon: const Icon(Icons.edit),
+            tooltip: 'Edit Student',
+          ),
+        ],
+      ),
+
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(15),
+          child: Card(
+            elevation: 10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+
+                children: [
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundImage: AssetImage(student.profileImage),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  Text(
+                    student.name ?? 'No Name',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  Text(
+                    'Student ID: ${student.studentID ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    'Course: ${student.course ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    'Status: ${student.studentStatus == null ? 'N/A' : (student.studentStatus! ? 'Active' : 'Inactive')}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    'Email: ${student.email ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    'Age: ${student.age ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    'Height: ${student.height?.toStringAsFixed(2) ?? 'N/A'} ft',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    'Hobby: ${student.hobby ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    'Favorite Subject: ${student.favoriteSubject ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// STUDENT LIST SCREEN
+class StudentListScreen extends StatefulWidget {
+  const StudentListScreen({super.key});
+
+  @override
+  State<StudentListScreen> createState() => _StudentListScreenState();
+}
+
+class LoadingScreen extends StatelessWidget {
+  //nag create ko lain class para sa loading screen
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,8 +405,9 @@ class LoadingScreen extends StatelessWidget { //nag create ko lain class para sa
   }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  bool isLoading = true; // nag set ko ug boolean variable nga isLoading para ma determine kung nag load pa ba ang data or wala
+class _StudentListScreenState extends State<StudentListScreen> {
+  bool isLoading =
+      true; // nag set ko ug boolean variable nga isLoading para ma determine kung nag load pa ba ang data or wala
   List<bool> isFavorite = List.filled(students.length, false);
   List<bool> isEdited = List.filled(students.length, false);
 
@@ -151,7 +417,8 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     Future.delayed(const Duration(seconds: 3), () {
       setState(() {
-        isLoading = false; // nag set ko ug delay nga 3 seconds para ma simulate ang loading sa data, human sa 3 seconds, ma set ang isLoading to false
+        isLoading =
+            false; // nag set ko ug delay nga 3 seconds para ma simulate ang loading sa data, human sa 3 seconds, ma set ang isLoading to false
       });
     });
   }
@@ -169,6 +436,14 @@ class _MyHomePageState extends State<MyHomePage> {
             centerTitle: true,
           ),
 
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/add-student');
+            },
+            tooltip: 'Add Student',
+            child: const Icon(Icons.add),
+          ),
+
           body: students.isEmpty
               ? const Center(
                   child: Text(
@@ -183,7 +458,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     final student = students[index];
                     return GestureDetector(
                       onTap: () {
-                        print('Card tapped for ${student.name}');
+                        Navigator.pushNamed(
+                          context,
+                          '/student-details',
+                          arguments: student,
+                        );
                       },
                       child: Card(
                         elevation: 10,
