@@ -435,7 +435,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
             centerTitle: true,
           ),
-
+          // mao ni ang floating action button nga nag navigate sa add student screen
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               Navigator.pushNamed(context, '/add-student');
