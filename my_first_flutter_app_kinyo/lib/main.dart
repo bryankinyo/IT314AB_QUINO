@@ -1,6 +1,12 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-void main() {
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() async {
+  // kinahanglan ni para maka-load sa saved data before mu-start ang app
+  WidgetsFlutterBinding.ensureInitialized();
+  await loadStudents();
   runApp(const MyApp());
 }
 
@@ -28,6 +34,38 @@ class Student {
     this.email,
     this.favoriteSubject,
   });
+
+  // i-convert ang student ngadto sa Map para ma-save
+  Map<String, dynamic> toMap() {
+    return {
+      'profileImage': profileImage,
+      'name': name,
+      'course': course,
+      'hobby': hobby,
+      'height': height,
+      'studentStatus': studentStatus,
+      'age': age,
+      'studentID': studentID,
+      'email': email,
+      'favoriteSubject': favoriteSubject,
+    };
+  }
+
+  // i-convert ang saved Map balik ngadto sa student
+  factory Student.fromMap(Map<String, dynamic> map) {
+    return Student(
+      profileImage: map['profileImage'],
+      name: map['name'],
+      course: map['course'],
+      hobby: map['hobby'],
+      height: (map['height'] as num?)?.toDouble(),
+      studentStatus: map['studentStatus'],
+      age: map['age'],
+      studentID: map['studentID'],
+      email: map['email'],
+      favoriteSubject: map['favoriteSubject'],
+    );
+  }
 }
 
 final List<Student> students = [
@@ -97,6 +135,30 @@ final List<Student> students = [
   ),
 ];
 
+// LOCAL STORAGE
+// mao ni ang function nga nag save sa students list sa local storage
+Future<void> saveStudents() async {
+  final prefs = await SharedPreferences.getInstance();
+  final savedList = students.map((s) => jsonEncode(s.toMap())).toList();
+  await prefs.setStringList('students', savedList);
+}
+
+// mao ni ang function nga nag load sa saved students pag-start sa app
+Future<void> loadStudents() async {
+  final prefs = await SharedPreferences.getInstance();
+  final savedList = prefs.getStringList('students');
+
+  // kung wala pay na-save, gamiton ang default nga students list
+  if (savedList == null) {
+    return;
+  }
+
+  students.clear();
+  for (final item in savedList) {
+    students.add(Student.fromMap(jsonDecode(item)));
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -133,6 +195,16 @@ class AddStudentScreen extends StatefulWidget {
 }
 
 class _AddStudentScreenState extends State<AddStudentScreen> {
+  // key para ma validate ang form
+  final _formKey = GlobalKey<FormState>();
+
+  // controllers para sa matag input field
+  final TextEditingController idController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController courseController = TextEditingController();
+  final TextEditingController yearLevelController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -165,18 +237,154 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
 
-              child: const Padding(
-                padding: EdgeInsets.all(20),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
 
-                child: Text(
-                  'Student input form will be added here.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // Student ID: dili pwede empty ug dili pwede duplicate
+                      TextFormField(
+                        controller: idController,
+                        decoration: const InputDecoration(
+                          labelText: 'Student ID',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Student ID is required';
+                          }
+                          for (final student in students) {
+                            if (student.studentID?.toLowerCase() ==
+                                value.trim().toLowerCase()) {
+                              return 'Student ID already exists';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 15),
+                      // Name: dili pwede empty
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Full Name is required';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      //validation sa course, dapat naay i input ang user sa course,
+                      //dili pwede empty
+                      TextFormField(
+                        controller: courseController,
+                        decoration: const InputDecoration(
+                          labelText: 'Course',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Course is required';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      // Year Level: dapat 1 to 4 ra ang value, dili pwede empty
+                      TextFormField(
+                        controller: yearLevelController,
+                        decoration: const InputDecoration(
+                          labelText: 'Year Level',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Year Level is required';
+                          }
+                          final year = int.tryParse(value.trim());
+                          if (year == null || year < 1 || year > 4) {
+                            return 'Year Level must be from 1 to 4';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      // Email: kinahanglan naay @ ug dot
+                      TextFormField(
+                        controller: emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email Address',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Email Address is required';
+                          }
+                          final emailPattern = RegExp(
+                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                          );
+                          if (!emailPattern.hasMatch(value.trim())) {
+                            return 'Enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
 
             const SizedBox(height: 15),
+
+            ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  // Create a new Student object with the provided details
+                  final newStudent = Student(
+                    profileImage: 'lib/assets/lastikman.jpg',
+                    studentID: idController.text.trim(),
+                    name: nameController.text.trim(),
+                    course:
+                        '${yearLevelController.text.trim()} - ${courseController.text.trim()}',
+                    email: emailController.text.trim(),
+                    studentStatus: true,
+                  );
+
+                  // idugang sa students list
+                  students.add(newStudent);
+
+                  // i-save sa local storage
+                  saveStudents();
+
+                  // limpyohan ang mga fields
+                  idController.clear();
+                  nameController.clear();
+                  courseController.clear();
+                  yearLevelController.clear();
+                  emailController.clear();
+
+                  // balik sa student list
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Enroll Student'),
+            ),
+
+            const SizedBox(height: 10),
 
             OutlinedButton(
               onPressed: () {
@@ -192,8 +400,16 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
 }
 
 // STUDENT DETAILS SCREEN
-class StudentDetailsScreen extends StatelessWidget {
+class StudentDetailsScreen extends StatefulWidget {
   const StudentDetailsScreen({super.key});
+
+  @override
+  State<StudentDetailsScreen> createState() => _StudentDetailsScreenState();
+}
+
+class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
+  // ang student nga gipakita karon sa screen
+  Student? currentStudent;
 
   // Mao ni diri ang function nga nag show sa edit dialog box para sa student details
   void _showEditDialog(BuildContext context, Student student) {
@@ -253,6 +469,62 @@ class StudentDetailsScreen extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
+                // i-check kung ang Student ID gigamit na sa laing student
+                final index = students.indexOf(student);
+                for (int i = 0; i < students.length; i++) {
+                  if (i != index &&
+                      students[i].studentID?.toLowerCase() ==
+                          idController.text.trim().toLowerCase()) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Duplicate Student ID'),
+                          content: const Text(
+                            'Student ID already exists. Please use a different ID.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    return;
+                  }
+                }
+
+                // maghimo ug updated nga student gamit ang gi-edit nga info
+                final updatedStudent = Student(
+                  profileImage: student.profileImage,
+                  name: nameController.text.trim(),
+                  studentID: idController.text.trim(),
+                  course: courseController.text.trim(),
+                  email: emailController.text.trim(),
+                  hobby: hobbyController.text.trim(),
+                  favoriteSubject: subjectController.text.trim(),
+                  height: student.height,
+                  studentStatus: student.studentStatus,
+                  age: student.age,
+                );
+
+                // ilisan ang daan nga student sa students list
+                if (index != -1) {
+                  students[index] = updatedStudent;
+                }
+
+                // i-save ang changes sa local storage
+                saveStudents();
+
+                // i-update ang gipakita sa screen
+                setState(() {
+                  currentStudent = updatedStudent;
+                });
+
                 Navigator.pop(context);
               },
               child: const Text('Save'),
@@ -266,7 +538,8 @@ class StudentDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // ang student nga gipasa gikan sa list through route arguments
-    final student = ModalRoute.of(context)!.settings.arguments as Student;
+    currentStudent ??= ModalRoute.of(context)!.settings.arguments as Student;
+    final student = currentStudent!;
 
     return Scaffold(
       backgroundColor: Colors.deepPurple.shade50,
@@ -408,8 +681,8 @@ class LoadingScreen extends StatelessWidget {
 class _StudentListScreenState extends State<StudentListScreen> {
   bool isLoading =
       true; // nag set ko ug boolean variable nga isLoading para ma determine kung nag load pa ba ang data or wala
-  List<bool> isFavorite = List.filled(students.length, false);
-  List<bool> isEdited = List.filled(students.length, false);
+  List<bool> isFavorite = List.filled(students.length, false, growable: true);
+  List<bool> isEdited = List.filled(students.length, false, growable: true);
 
   @override
   void initState() {
@@ -437,8 +710,17 @@ class _StudentListScreenState extends State<StudentListScreen> {
           ),
           // mao ni ang floating action button nga nag navigate sa add student screen
           floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/add-student');
+            onPressed: () async {
+              // maghulat hangtod mubalik gikan sa add student screen
+              await Navigator.pushNamed(context, '/add-student');
+
+              // i-update ang list kung naay bag-ong student
+              setState(() {
+                while (isFavorite.length < students.length) {
+                  isFavorite.add(false);
+                  isEdited.add(false);
+                }
+              });
             },
             tooltip: 'Add Student',
             child: const Icon(Icons.add),
@@ -457,12 +739,16 @@ class _StudentListScreenState extends State<StudentListScreen> {
                   itemBuilder: (context, index) {
                     final student = students[index];
                     return GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(
+                      onTap: () async {
+                        // maghulat hangtod mubalik gikan sa student details
+                        await Navigator.pushNamed(
                           context,
                           '/student-details',
                           arguments: student,
                         );
+
+                        // i-update ang list kung naay na-edit nga student
+                        setState(() {});
                       },
                       child: Card(
                         elevation: 10,
@@ -636,6 +922,9 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                         isFavorite.removeAt(index);
                                         isEdited.removeAt(index);
                                       });
+
+                                      // i-save ang list human sa pag-delete
+                                      saveStudents();
 
                                       print('Deleted ${student.name}');
                                     },
