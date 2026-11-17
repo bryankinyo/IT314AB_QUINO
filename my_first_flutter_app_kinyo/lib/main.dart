@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -143,12 +142,12 @@ Future<void> saveStudents() async {
   await prefs.setStringList('students', savedList);
 }
 
-// mao ni ang function nga nag load sa saved students pag-start sa app
+// mao ni ang function nga nag load sa saved students pagstart sa app
 Future<void> loadStudents() async {
   final prefs = await SharedPreferences.getInstance();
   final savedList = prefs.getStringList('students');
 
-  // kung wala pay na-save, gamiton ang default nga students list
+  // kung wala pay nasave, gamiton ang default nga students list
   if (savedList == null) {
     return;
   }
