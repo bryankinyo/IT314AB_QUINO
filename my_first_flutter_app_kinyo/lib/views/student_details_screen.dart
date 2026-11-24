@@ -18,10 +18,10 @@ class StudentDetailsScreen extends StatefulWidget {
 
 class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
   // ang student nga gipakita karon sa screen
-  Student? currentStudent;
+  Student? _studentRecord;
 
   // EDIT STUDENT DIALOG
-  void _showEditDialog(Student student) {
+  void _openStudentEditor(Student student) {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: student.name);
 
@@ -100,7 +100,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
 
                 // i-update ang gipakita sa screen (kuhaon sa reloaded list para naay program name)
                 setState(() {
-                  currentStudent = studentVM.students.firstWhere(
+                  _studentRecord = studentVM.students.firstWhere(
                     (s) => s.id == student.id,
                     orElse: () => updated,
                   );
@@ -115,7 +115,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
   }
 
   // GRADE DIALOG (para sa add ug edit)
-  void _showGradeDialog(Enrollment enrollment) {
+  void _openGradeEditor(Enrollment enrollment) {
     final formKey = GlobalKey<FormState>();
     final gradeController = TextEditingController(
       text: enrollment.grade?.toString() ?? '',
@@ -217,7 +217,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
   }
 
   // CHANGE SCHEDULE DIALOG: pili ug lain nga schedule sa same subject
-  void _showChangeScheduleDialog(Enrollment enrollment) async {
+  void _openSchedulePicker(Enrollment enrollment) async {
     await scheduleVM.loadBySubject(enrollment.subjectId);
     if (!mounted) return;
 
@@ -276,28 +276,33 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     // ang student nga gipasa gikan sa list through route arguments
-    if (currentStudent == null) {
-      currentStudent = ModalRoute.of(context)!.settings.arguments as Student;
+    if (_studentRecord == null) {
+      _studentRecord = ModalRoute.of(context)!.settings.arguments as Student;
 
       // i-load ang enrolled subjects sa student (human ma-build ang screen)
       enrollmentVM.reset();
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        enrollmentVM.loadEnrollments(currentStudent!.id!);
+        enrollmentVM.loadEnrollments(_studentRecord!.id!);
       });
     }
-    final student = currentStudent!;
+    final student = _studentRecord!;
 
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: const Color(0xFFF4F6FA),
 
       appBar: AppBar(
-        title: const Text('Student Details'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        centerTitle: true,
+        title: const Text(
+          'Student Profile',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color(0xFF243B63),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
         actions: [
           IconButton(
             onPressed: () {
-              _showEditDialog(student);
+              _openStudentEditor(student);
             },
             icon: const Icon(Icons.edit),
             tooltip: 'Edit Student',
@@ -327,24 +332,34 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
       ),
 
       body: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
         child: Column(
           children: [
             // STUDENT INFO
             Card(
-              elevation: 10,
+              margin: EdgeInsets.zero,
+              elevation: 2,
+              shadowColor: const Color(0xFF243B63).withValues(alpha: 0.12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.all(18),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 30,
-                      child: Text(initialOf(student.name)),
+                      radius: 31,
+                      backgroundColor: const Color(0xFFE4EBF6),
+                      foregroundColor: const Color(0xFF243B63),
+                      child: Text(
+                        initialOf(student.name),
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 15),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,15 +367,24 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                           Text(
                             student.name,
                             style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF243B63),
                             ),
                           ),
-                          Text('Student ID: ${student.id}'),
-                          Text('Program: ${student.programName ?? 'N/A'}'),
+                          const SizedBox(height: 5),
+                          Text(
+                            'ID  ${student.id}',
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                          Text(
+                            student.programName ?? 'No program assigned',
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
                         ],
                       ),
                     ),
+                    const Icon(Icons.school_outlined, color: Color(0xFF6B7F9D)),
                   ],
                 ),
               ),
@@ -374,7 +398,11 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                 const Expanded(
                   child: Text(
                     'Enrolled Subjects',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF243B63),
+                    ),
                   ),
                 ),
                 ElevatedButton.icon(
@@ -382,7 +410,18 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                     // adto sa enroll screen ug ipasa ang student
                     Navigator.pushNamed(context, '/enroll', arguments: student);
                   },
-                  icon: const Icon(Icons.add),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF243B63),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 11,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.person_add_alt_1),
                   label: const Text('Enroll'),
                 ),
               ],
@@ -415,8 +454,14 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                       final enrollment = enrollmentVM.enrollments[index];
 
                       return Card(
+                        margin: const EdgeInsets.only(bottom: 11),
+                        elevation: 1,
+                        shadowColor: Colors.black12,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
                         child: Padding(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(15),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -424,13 +469,16 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                                 '${enrollment.subjectCode} - ${enrollment.subjectName}',
                                 style: const TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF243B63),
                                 ),
                               ),
+                              const SizedBox(height: 7),
                               Text(
                                 '${enrollment.day} ${enrollment.startTime} - ${enrollment.endTime} | Room ${enrollment.room}',
                               ),
-                              Text('Status: ${enrollment.status}'),
+                              const SizedBox(height: 4),
+                              Text('Enrollment status: ${enrollment.status}'),
                               Text(
                                 enrollment.grade == null
                                     ? 'Grade: No grade yet'
@@ -445,7 +493,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                                   // add or edit grade
                                   IconButton(
                                     onPressed: () {
-                                      _showGradeDialog(enrollment);
+                                      _openGradeEditor(enrollment);
                                     },
                                     icon: Icon(
                                       enrollment.grade == null
@@ -489,9 +537,9 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                                   // change schedule
                                   IconButton(
                                     onPressed: () {
-                                      _showChangeScheduleDialog(enrollment);
+                                      _openSchedulePicker(enrollment);
                                     },
-                                    icon: const Icon(Icons.swap_horiz),
+                                    icon: const Icon(Icons.event_repeat),
                                     tooltip: 'Change Schedule',
                                   ),
 

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../models/subject.dart';
 import '../viewmodels/subject_viewmodel.dart';
@@ -21,8 +22,12 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
   // SUBJECT FORM DIALOG: kung walay subject = add, kung naay subject = edit
   void _showSubjectDialog({Subject? subject}) {
     final formKey = GlobalKey<FormState>();
-    final codeController = TextEditingController(text: subject?.code ?? '');
-    final nameController = TextEditingController(text: subject?.name ?? '');
+    final codeController = TextEditingController(
+      text: subject?.code ?? '',
+    );
+    final nameController = TextEditingController(
+      text: subject?.name ?? '',
+    );
     final unitsController = TextEditingController(
       text: subject?.units.toString() ?? '',
     );
@@ -34,7 +39,16 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(subject == null ? 'Add Subject' : 'Edit Subject'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            subject == null ? 'Add Subject' : 'Edit Subject',
+            style: const TextStyle(
+              color: Color(0xFF243B63),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: SingleChildScrollView(
             child: Form(
               key: formKey,
@@ -43,35 +57,62 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
                 children: [
                   TextFormField(
                     controller: codeController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Subject Code',
+                      prefixIcon: const Icon(Icons.code),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    validator: (v) => validateRequired(v, 'Subject Code'),
+                    validator: (v) =>
+                        validateRequired(v, 'Subject Code'),
                   ),
+                  const SizedBox(height: 14),
                   TextFormField(
                     controller: nameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Subject Name',
+                      prefixIcon: const Icon(Icons.menu_book_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    validator: (v) => validateRequired(v, 'Subject Name'),
+                    validator: (v) =>
+                        validateRequired(v, 'Subject Name'),
                   ),
+                  const SizedBox(height: 14),
                   TextFormField(
                     controller: unitsController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Units'),
-                    validator: (v) => validatePositiveNumber(v, 'Units'),
+                    decoration: InputDecoration(
+                      labelText: 'Units',
+                      prefixIcon: const Icon(Icons.numbers),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    validator: (v) =>
+                        validatePositiveNumber(v, 'Units'),
                   ),
+                  const SizedBox(height: 14),
                   // description: optional
                   TextFormField(
                     controller: descController,
-                    decoration: const InputDecoration(
+                    maxLines: 3,
+                    decoration: InputDecoration(
                       labelText: 'Description (optional)',
+                      prefixIcon: const Icon(Icons.description_outlined),
+                      alignLabelWithHint: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           actions: [
             TextButton(
               onPressed: () {
@@ -79,11 +120,18 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
               },
               child: const Text('Cancel'),
             ),
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF243B63),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
 
-                final newSubject = Subject(
+                final updatedSubject = Subject(
                   id: subject?.id,
                   code: codeController.text.trim(),
                   name: nameController.text.trim(),
@@ -94,17 +142,20 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
                 );
 
                 final String? error;
+
                 if (subject == null) {
-                  error = await subjectVM.addSubject(newSubject);
+                  error = await subjectVM.addSubject(updatedSubject);
                 } else {
-                  error = await subjectVM.updateSubject(newSubject);
+                  error = await subjectVM.updateSubject(updatedSubject);
                 }
+
                 if (!dialogContext.mounted) return;
 
                 if (error != null) {
                   showMessage(dialogContext, error);
                   return;
                 }
+
                 Navigator.pop(dialogContext);
               },
               child: const Text('Save'),
@@ -115,112 +166,210 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
     );
   }
 
+  // tangtangon ang subject human ma-confirm sa user
+  Future<void> _deleteSubject(Subject subject) async {
+    final confirmed = await confirmDialog(
+      context,
+      'Delete Subject',
+      'Delete ${subject.name}? Its schedules and enrollments will also be deleted.',
+    );
+
+    if (!confirmed) return;
+
+    final error = await subjectVM.deleteSubject(subject.id!);
+
+    if (!mounted) return;
+
+    showMessage(context, error ?? 'Subject deleted');
+  }
+
+  // mo-adto sa details sa napiling subject
+  void _openSubjectDetails(Subject subject) {
+    Navigator.pushNamed(
+      context,
+      '/subject-details',
+      arguments: subject,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: const Color(0xFFF4F6FA),
 
       appBar: AppBar(
-        title: const Text('Subjects'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        centerTitle: true,
+        title: const Text(
+          'Subjects',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color(0xFF243B63),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
       ),
 
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           _showSubjectDialog();
         },
-        tooltip: 'Add Subject',
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF243B63),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Subject'),
       ),
 
       body: ListenableBuilder(
         listenable: subjectVM,
         builder: (context, child) {
           if (subjectVM.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF243B63),
+              ),
+            );
           }
 
           if (subjectVM.errorMessage != null) {
             return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.cloud_off_outlined,
+                      size: 42,
+                      color: Colors.blueGrey.shade400,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      subjectVM.errorMessage!,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: subjectVM.loadSubjects,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Try Again'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (subjectVM.subjects.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(subjectVM.errorMessage!, textAlign: TextAlign.center),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: subjectVM.loadSubjects,
-                    child: const Text('Retry'),
+                  Icon(
+                    Icons.library_books_outlined,
+                    size: 54,
+                    color: Colors.blueGrey.shade300,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'No subjects available.',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    'Add a subject to get started.',
+                    style: TextStyle(
+                      color: Colors.blueGrey.shade500,
+                    ),
                   ),
                 ],
               ),
             );
           }
 
-          if (subjectVM.subjects.isEmpty) {
-            return const Center(
-              child: Text(
-                'No subjects available.',
-                style: TextStyle(fontSize: 18),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(15),
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 90),
             itemCount: subjectVM.subjects.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final subject = subjectVM.subjects[index];
 
               return Card(
-                elevation: 10,
+                margin: EdgeInsets.zero,
+                elevation: 1,
+                shadowColor: Colors.black12,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(16),
                 ),
+                clipBehavior: Clip.antiAlias,
                 child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 10,
+                  ),
                   onTap: () {
                     // adto sa subject details (schedules)
-                    Navigator.pushNamed(
-                      context,
-                      '/subject-details',
-                      arguments: subject,
-                    );
+                    _openSubjectDetails(subject);
                   },
+                  leading: CircleAvatar(
+                    radius: 25,
+                    backgroundColor: const Color(0xFFE4EBF6),
+                    foregroundColor: const Color(0xFF243B63),
+                    child: const Icon(Icons.menu_book_outlined),
+                  ),
                   title: Text(
                     '${subject.code} - ${subject.name}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF243B63),
+                    ),
                   ),
-                  subtitle: Text(
-                    'Units: ${subject.units}'
-                    '${subject.description == null ? '' : '\n${subject.description}'}',
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          _showSubjectDialog(subject: subject);
-                        },
-                        icon: const Icon(Icons.edit),
-                        tooltip: 'Edit Subject',
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Text(
+                      'Units: ${subject.units}'
+                      '${subject.description == null ? '' : '\n${subject.description}'}',
+                      style: TextStyle(
+                        height: 1.4,
+                        color: Colors.blueGrey.shade700,
                       ),
-                      IconButton(
-                        onPressed: () async {
-                          final yes = await confirmDialog(
-                            context,
-                            'Delete Subject',
-                            'Delete ${subject.name}? Its schedules and enrollments will also be deleted.',
-                          );
-                          if (!yes) return;
-
-                          final error = await subjectVM.deleteSubject(
-                            subject.id!,
-                          );
-                          if (!mounted) return;
-                          showMessage(context, error ?? 'Subject deleted');
-                        },
-                        icon: const Icon(Icons.delete),
-                        tooltip: 'Delete Subject',
+                    ),
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    tooltip: 'Subject options',
+                    onSelected: (choice) {
+                      if (choice == 'edit') {
+                        _showSubjectDialog(subject: subject);
+                      } else if (choice == 'delete') {
+                        _deleteSubject(subject);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 20),
+                            SizedBox(width: 10),
+                            Text('Edit Subject'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: Colors.deepOrange,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Delete Subject'),
+                          ],
+                        ),
                       ),
                     ],
                   ),
